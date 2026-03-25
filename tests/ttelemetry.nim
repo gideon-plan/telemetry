@@ -2,7 +2,7 @@
 {.experimental: "strict_funcs".}
 import std/[unittest, strutils, tables]
 import basis/code/choice
-import otel
+import telemetry
 
 suite "span":
   test "create and finish span":

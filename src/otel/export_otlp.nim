@@ -5,7 +5,8 @@
 
 {.experimental: "strict_funcs".}
 
-import lattice, span, meter
+import basis/code/choice, span, meter
+import context
 
 type
   OtlpExporter* = object
@@ -14,11 +15,11 @@ type
 proc new_otlp_exporter*(endpoint: string = "http://localhost:4318"): OtlpExporter =
   OtlpExporter(endpoint: endpoint)
 
-proc export_spans*(e: OtlpExporter, spans: seq[Span]): Result[void, OtelError] =
+proc export_spans*(e: OtlpExporter, spans: seq[Span]): Choice[bool] =
   ## Stub: serialize spans to OTLP protobuf and POST to /v1/traces.
-  Result[void, OtelError].bad(OtelError(msg: "OTLP export not yet implemented (requires protobuf codec)"))
+  bad[bool]("otel", "OTLP export not yet implemented (requires protobuf codec)")
 
 proc export_metrics*(e: OtlpExporter, counters: seq[Counter],
-                     gauges: seq[Gauge]): Result[void, OtelError] =
+                     gauges: seq[Gauge]): Choice[bool] =
   ## Stub: serialize metrics to OTLP protobuf and POST to /v1/metrics.
-  Result[void, OtelError].bad(OtelError(msg: "OTLP export not yet implemented (requires protobuf codec)"))
+  bad[bool]("otel", "OTLP export not yet implemented (requires protobuf codec)")

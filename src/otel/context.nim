@@ -3,7 +3,11 @@
 {.experimental: "strict_funcs".}
 
 import std/strutils
-import lattice
+
+type
+  OtelError* = object of CatchableError
+
+import basis/code/choice
 
 type
   TraceContext* = object
@@ -12,15 +16,13 @@ type
     parent_id*: string  ## 16 hex chars (8 bytes)
     flags*: uint8       ## 0x01 = sampled
 
-proc parse_traceparent*(header: string): Result[TraceContext, OtelError] =
+proc parse_traceparent*(header: string): Choice[TraceContext] =
   ## Parse W3C traceparent header: "00-traceid-parentid-flags"
   let parts = header.split('-')
   if parts.len != 4:
-    return Result[TraceContext, OtelError].bad(
-      OtelError(msg: "invalid traceparent: expected 4 parts, got " & $parts.len))
+    return bad[TraceContext]("otel", "invalid traceparent: expected 4 parts, got " & $parts.len)
   if parts[0].len != 2 or parts[1].len != 32 or parts[2].len != 16 or parts[3].len != 2:
-    return Result[TraceContext, OtelError].bad(
-      OtelError(msg: "invalid traceparent: wrong field lengths"))
+    return bad[TraceContext]("otel", "invalid traceparent: wrong field lengths")
   var ctx: TraceContext
   try:
     ctx.version = uint8(parseHexInt(parts[0]))
@@ -28,8 +30,8 @@ proc parse_traceparent*(header: string): Result[TraceContext, OtelError] =
     ctx.parent_id = parts[2].toLowerAscii()
     ctx.flags = uint8(parseHexInt(parts[3]))
   except ValueError as e:
-    return Result[TraceContext, OtelError].bad(OtelError(msg: "invalid traceparent: " & e.msg))
-  Result[TraceContext, OtelError].good(ctx)
+    return bad[TraceContext]("otel", "invalid traceparent: " & e.msg)
+  good(ctx)
 
 proc format_traceparent*(ctx: TraceContext): string =
   ## Format W3C traceparent header.
